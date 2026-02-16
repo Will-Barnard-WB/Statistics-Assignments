@@ -1,0 +1,124 @@
+---
+title: "Exercise One"
+author: "Will Barnard"
+date: "`r format(Sys.time(), '%16 %01 %2026')`"
+output: pdf_document
+---
+
+```{r echo=FALSE}
+library(knitr)
+opts_chunk$set(comment=NA, warning=FALSE, fig.path="/tmp/Figs/")
+```
+
+<!-- You should edit out the instructions in your submitted work -->
+
+Format your (reproducible) answers using R Markdown and submit on Moodle as a PDF.
+
+You can obtain the data for this assignment using:
+
+```{r}
+library(faraway)
+data(truck)
+head(truck)
+```
+
+You will need to have installed the `faraway` package for this to work. Read the
+help page for `truck` for information about the dataset.
+
+Answer the following questions:
+
+## Q1
+
+Make a boxplot showing how height varies for the two levels of `B`.
+
+```{r, echo=TRUE}
+plot(height ~ B, truck,
+  main="Height by B",
+  xlab="B",
+  ylab="Height"
+  )
+```
+
+## Q2
+
+Fit a linear model with height as the response and all five factors
+as predictors. Report the regression coefficients.
+
+```{r, echo=TRUE}
+model = lm(height ~ B + C + D + E + O, truck)
+coef(model)
+```
+
+## Q3
+
+Display the first six lines of the design matrix. Identify the coding used for the two levels of each factor.
+
+```{r echo=TRUE}
+X = model.matrix(model)
+head(X)
+
+## For each factor, the reference level "-" is coded as 0, and the "+" level is coded as 1.
+```
+
+## Q4
+
+Change the coding of all the factors to have reference level `-`. You will
+find the `relevel` function useful. Refit the model and compute the regression coefficients. Comment on how they compare to the previously computed coefficients.
+
+```{r, echo=TRUE}
+truck$B = relevel(truck$B, ref = "-")
+truck$C = relevel(truck$C, ref = "-")
+truck$D = relevel(truck$D, ref = "-")
+truck$E = relevel(truck$E, ref = "-")
+truck$O = relevel(truck$O, ref = "-")
+
+model_new = lm(height ~ B + C + D + E + O, data = truck)
+coef(model_new)
+
+
+## These coefficients are identical to the previous ones.
+```
+
+## Q5
+
+Display the new design matrix and compare to before.
+
+```{r, echo=TRUE}
+X_new = model.matrix(model_new)
+head(X_new)
+
+## Again, the design matrix is identical to the previous one.
+```
+
+## Q6
+
+Which observed combination of the predictors gives a predicted response
+close to the target of 8?
+
+```{r, echo=TRUE}
+idx = which.min(abs(predict(model) - 8))
+truck[idx, ]
+predict(model)[idx]
+
+## so the combination of the predictors that gives a predicted response close to the target of 8 is:
+# B = +, C = -, D = -, E = +, 0 = -
+```
+
+## Q7
+
+There are 3 replicates of each observed combination of the predictors. Compute
+the SD within each set of three replicates. (This is easier once you notice the repeated pattern in the design.) What does this say about the
+linear model assumptions?
+
+```{r, echo=TRUE}
+group_id = apply(truck[, c("B","C","D","E","O")], 1, paste, collapse = "_")
+
+sd_values = tapply(truck$height, group_id, sd)
+sd_values
+
+## The relatively low and stable sd's across groups indicates that the linear model is  
+##in fact a good fit for the model.
+```
+
+
+
